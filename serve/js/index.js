@@ -1,0 +1,3 @@
+function alertclick() {
+    alert("Subscribe!");
+}
