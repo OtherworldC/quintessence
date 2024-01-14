@@ -12,8 +12,9 @@ void handle_req(request_ctx_t* ctx) {
 
 int main() {
     printf("Hello from Quintessence.\n");
-    qu_config_t config = new_server("./serve");
-    register_handler(config, "GET", "/", handle_req);
-    int rval = run_qu_server(config);
+    qu_config_t config;
+    new_server(&config, "./serve");
+    register_handler(&config, "GET", "/", handle_req);
+    int rval = run_qu_server(&config);
     return rval;
 }
