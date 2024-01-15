@@ -32,4 +32,5 @@ void extract_context(request_ctx_t* ctx, int newsockfd, struct sockaddr_in* clie
     // }
 
     sprintf(ctx->request_ip, "%s", inet_ntoa((*client_addr).sin_addr));
+    ctx->error = 0;
 }

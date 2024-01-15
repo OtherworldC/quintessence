@@ -10,7 +10,7 @@
 #endif
 
 #ifndef THREAD_NUM
-#define THREAD_NUM 4
+#define THREAD_NUM 12
 #endif
 
 #include "internal/structs.h"
