@@ -6,6 +6,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <stddef.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include "internal/context.h"
@@ -137,7 +138,15 @@ void handle_request(void* req_arg) {
     sprintf(reqdata, "%s | %s | %s\n", ctx.request_ip, ctx.method, ctx.uri);
     // write to socket
     create_response(config, &ctx);
+
+    // ignoring signal 13 SIGPIPE to avoid crashes
+    struct sigaction new_actn, old_actn;
+    new_actn.sa_handler = SIG_IGN;
+    sigemptyset(&new_actn.sa_mask);
+    new_actn.sa_flags = 0;
+    sigaction(SIGPIPE, &new_actn, &old_actn);
     int valwrite = write(newsockfd, ctx.response, strlen(ctx.response));
+    sigaction(SIGPIPE, &old_actn, NULL);
     if (valwrite < 0) {
         perror("quintessence (write)");
         return;

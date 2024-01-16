@@ -41,7 +41,6 @@ void create_response(qu_config_t* config, request_ctx_t* ctx) {
         printf("handler_func was NULL. Func not called.\n");
         fallback_404_func(ctx);
     }
-    // return status;
 }
 
 void write_response(request_ctx_t* ctx, char content[], char content_type[]) {
