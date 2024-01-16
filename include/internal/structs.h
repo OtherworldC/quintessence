@@ -2,6 +2,7 @@
 #define QUINTESSENCE_STRUCTS_H_
 #include <arpa/inet.h>
 #include "internal/router/hashmap.h"
+#include "internal/router/thpool.h"
 
 
 typedef struct QuRequestContext {
@@ -31,11 +32,17 @@ typedef struct Handler {
 
 typedef struct QuConfig {
     int sockfd;
+    threadpool thpool;
     struct sockaddr_in host_addr;
     int host_addrlen;
     // handler_t handlers[1024];
     struct hashmap* handlers;
     char basepath[];
 } qu_config_t;
+
+typedef struct RequestThreadArg {
+    int newsockfd;
+    qu_config_t* config;
+} req_arg_t;
 
 #endif
