@@ -183,7 +183,7 @@ int serve_large_file(qu_config_t* config, request_ctx_t* ctx) {
     #ifdef __linux__
     // linux sendfile
     off_t offset = 0;
-    ssize_t bytes_sent = sendfile(sockfd, fd, &offset, sb.st_size);
+    ssize_t bytes_sent = sendfile(ctx->sockfd, fd, &offset, sb.st_size);
     close(fd);
 
     if (bytes_sent == -1) {
