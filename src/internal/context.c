@@ -8,6 +8,8 @@
 
 void extract_context(request_ctx_t* ctx, int newsockfd, struct sockaddr_in* client_addr, int* client_addrlen) {
     char* buffer = calloc(BUFSIZE, sizeof(char));
+
+    ctx->sockfd = newsockfd;
     
     // get client details
     int sockn = getsockname(newsockfd, (struct sockaddr *)client_addr, (socklen_t *)client_addrlen);

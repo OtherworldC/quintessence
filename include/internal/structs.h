@@ -14,6 +14,7 @@ typedef struct QuRequestContext {
     char version[64];
     char response[16384];
     int status;
+    int sockfd;
 } request_ctx_t;
 
 typedef struct QuRouteInfo {

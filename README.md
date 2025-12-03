@@ -1,5 +1,6 @@
 # Quintessence - C Web Server
 Simplicity. Speed. Extensibility. Reliability.
+Fully featured on MacOS, still some work to do on Linux. 
 
 ## License
 MIT License - See LICENSE

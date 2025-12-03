@@ -3,7 +3,6 @@
 #include <time.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <string.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <signal.h>
@@ -37,6 +36,7 @@ uint64_t handler_hash(const void* item, uint64_t seed0, uint64_t seed1) {
 
 void new_server(qu_config_t* config, char basepath[]) {
     strcpy(config->basepath, basepath);
+    printf("Basepath set to: %s\n", config->basepath);
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd == -1) {
         perror("quintessence (socket)");
@@ -67,33 +67,32 @@ void shutdown_server(qu_config_t* config) {
 }
 
 int run_qu_server(qu_config_t* passed_config) {
-    qu_config_t config = *passed_config;
     // bind socket to address
-    if (bind(config.sockfd, (struct sockaddr *)&config.host_addr, config.host_addrlen) != 0) {
+    if (bind(passed_config->sockfd, (struct sockaddr *)&passed_config->host_addr, passed_config->host_addrlen) != 0) {
         perror("quintessence (bind)");
         return -1;
     }
     printf("socket bound to address\n");
 
-    if (listen(config.sockfd, SOMAXCONN) != 0) {
+    if (listen(passed_config->sockfd, SOMAXCONN) != 0) {
         perror("quintessence (listen)");
         return -1;
     }
     printf("listening for connections...\n");
 
-    hashmap_scan(config.handlers, handler_iter, NULL);
+    hashmap_scan(passed_config->handlers, handler_iter, NULL);
     printf("\n");
 
     for (;;) {
         // accept incoming connections
-        int newsockfd = accept(config.sockfd, (struct sockaddr *)&config.host_addr, (socklen_t *)&config.host_addrlen);
+        int newsockfd = accept(passed_config->sockfd, (struct sockaddr *)&passed_config->host_addr, (socklen_t *)&passed_config->host_addrlen);
         req_arg_t req_arg;
-        req_arg.config = &config;
+        req_arg.config = passed_config;
         req_arg.newsockfd = newsockfd;
 
-        thpool_add_work(config.thpool, handle_request, (void*)&req_arg);
+        thpool_add_work(passed_config->thpool, handle_request, (void*)&req_arg);
     }
-    shutdown_server(&config);
+    shutdown_server(passed_config);
     return 0;
 }
 
@@ -137,19 +136,21 @@ void handle_request(void* req_arg) {
     char reqdata[1024];
     sprintf(reqdata, "%s | %s | %s\n", ctx.request_ip, ctx.method, ctx.uri);
     // write to socket
-    create_response(config, &ctx);
+    int written = create_response(config, &ctx);
 
-    // ignoring signal 13 SIGPIPE to avoid crashes
-    struct sigaction new_actn, old_actn;
-    new_actn.sa_handler = SIG_IGN;
-    sigemptyset(&new_actn.sa_mask);
-    new_actn.sa_flags = 0;
-    sigaction(SIGPIPE, &new_actn, &old_actn);
-    int valwrite = write(newsockfd, ctx.response, strlen(ctx.response));
-    sigaction(SIGPIPE, &old_actn, NULL);
-    if (valwrite < 0) {
-        perror("quintessence (write)");
-        return;
+    if (written == 0) {
+         // ignoring signal 13 SIGPIPE to avoid crashes
+        struct sigaction new_actn, old_actn;
+        new_actn.sa_handler = SIG_IGN;
+        sigemptyset(&new_actn.sa_mask);
+        new_actn.sa_flags = 0;
+        sigaction(SIGPIPE, &new_actn, &old_actn);
+        int valwrite = write(newsockfd, ctx.response, strlen(ctx.response));
+        sigaction(SIGPIPE, &old_actn, NULL);
+        if (valwrite < 0) {
+            perror("quintessence (write)");
+            return;
+        }
     }
 
     // sleep(1);
